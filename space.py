@@ -52,9 +52,9 @@ def main():
     planets.append(Planet(2 * 10**30, (0, 0), 50, "sun", (255, 255, 0), True))
     planets.append(Planet(6 * 10**24, (50, 0), 10, "earth", (0, 0, 255), True))
     planets.append(Planet(6.4 * 10**23, (231, 0), 9, "mars", (240, 0, 0), True))
-    planets.append(Planet(2 * 10**30, (400e+9, 0), 50, "sun 2", (255, 255, 0), True))
+    # planets.append(Planet(2 * 10**30, (400e+9, 0), 50, "sun 2", (255, 255, 0), True))
+    # planets[3].velocity = (0, 10000)
 
-    planets[3].velocity = (0, 10000)
     orbit_radius = 150 * distance_factor
     orbital_speed = math.sqrt((G * planets[0].mass) / orbit_radius)
     orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * planets[0].mass)
