@@ -1,12 +1,14 @@
 import pygame
 import math
 import os
+import ui_manager as ui
 
 window_width = 800
 window_height = 600
 origin = (window_width / 2, window_height / 2)
 path = os.path.dirname(__file__)
 
+global planets
 planets = []
 
 # 1 distance unit >> 1.000.000 km >> 1.000.000.000 m
@@ -15,141 +17,64 @@ distance_factor = 10**9
 # contants:
 G = 6.6743 * 10**-11
 
-# ui elements
-buttons = []
-in_menu = []
-text_inputs = []
-
-class Button():
-    def __init__(self, input_dimensions, input_position, input_text):
-        self.dimensions = input_dimensions
-        self.position = input_position
-        self.text = input_text
-
-        self.idle_color = (30, 30, 30)
-        self.hovered_color = (50, 50, 50)
-        self.pressed_color = (70, 70, 100)
-        self.text_color = (255, 255, 255)
-        self.color = self.idle_color
-
-        self.state = "idle" # "hovered, pressed"
-        self.button_rect = pygame.Rect(self.position, self.dimensions)
-
-        self.action_function = None
-
-        buttons.append(self)
-
-    def checkActivity(self):
-        if self.position[0] <= pygame.mouse.get_pos()[0] <= self.position[0] + self.dimensions[0] and self.position[1] <= pygame.mouse.get_pos()[1] <= self.position[1] + self.dimensions[1]:
-            self.state = "hovered"
-            self.color = self.hovered_color
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONUP:
-                    self.state = "pressed"
-                    self.color = self.pressed_color
-                    self.action_function()
-                    try:
-                        pass
-                    except:
-                        print("Error: No actionfunction assigned to button")
-        else:
-            self.state = "idle"
-            self.color = self.idle_color
-
-    def assign_function(self, action_function):
-        self.action_function = action_function
-
-class Text_input():
-    def __init__(self, input_dimensions, input_position, input_placeholder, input_max_content_len):
-        self.dimensions = input_dimensions
-        self.position = input_position
-        self.placeholder = input_placeholder
-
-        self.content = ""
-        self.max_content_len = input_max_content_len
-
-        self.idle_color = (30, 30, 30)
-        self.hovered_color = (50, 50, 50)
-        self.selected_color = (70, 70, 100)
-        self.text_color = (255, 255, 255)
-        self.color = self.idle_color
-
-        self.input_rect = pygame.Rect(self.position, self.dimensions)
-
-        self.state = "idle"
-        text_inputs.append(self)
-
-    def checkActivity(self):
-        if self.position[0] <= pygame.mouse.get_pos()[0] <= self.position[0] + self.dimensions[0] and self.position[1] <= pygame.mouse.get_pos()[1] <= self.position[1] + self.dimensions[1]:
-            if self.state == "idle":
-                self.state = "hovered"
-            if pygame.mouse.get_just_released()[0] == True:
-                self.state = "selected"
-                for element in text_inputs:
-                    if element == self: continue
-                    element.state = "idle"
-        elif self.state == "hovered":
-            self.state = "idle"
-        elif pygame.mouse.get_just_released()[0] == True and self.state == "selected":
-            self.state = "idle"
-        
-        if self.state == "selected":
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN or event.key == pygame.K_ESCAPE:
-                        self.state = "idle"
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.content = self.content[:-1]
-                    elif event.key == pygame.K_SPACE and len(self.content) <= self.max_content_len:
-                        self.content += " "
-                    elif len(self.content) <= self.max_content_len:
-                        self.content += event.unicode 
-
-        if self.state == "idle":
-            self.color = self.idle_color
-        elif self.state == "hovered":
-            self.color = self.hovered_color
-        else:
-            self.color = self.selected_color
-
 # initiate UI
-def menu():
-    global menu_opened
-    if menu_opened == False:
-        menu_opened = True
-    else: 
-        menu_opened = False
+ui.create_group("overlay_group", True)
+overlay_group = ui.get_group("overlay_group")
+ui.create_button("menu_button", (80, 30), (window_width -100, 20), "Menu")
+overlay_group.add_element(ui.get_button("menu_button"))
 
-menu_opened = False
+ui.create_group("menu_group", False)
+menu_group = ui.get_group("menu_group")
 
-menu_button = Button((80, 30), (window_width -100, 20), "Menu")
-menu_button.assign_function(menu)
+ui.create_button("load_sun_button", (80, 30), (20, 400), "Load Sun")
+menu_group.add_element(ui.get_button("load_sun_button"))
 
-load_default_button = Button((80, 30), (window_width -200, 20), "Load Default")
+ui.create_button("load_earth_button", (80, 30), (120, 400), "Load Earth")
+menu_group.add_element(ui.get_button("load_earth_button"))
 
-name_input = Text_input((150, 30), (20, 150), "Planet Name", 25)
-in_menu.append(name_input)
+ui.create_button("load_mars_button", (80, 30), (220, 400), "Load Mars")
+menu_group.add_element(ui.get_button("load_mars_button"))
 
-mass_input = Text_input((150, 30), (190, 150), "Mass", 25)
-in_menu.append(mass_input)
+ui.create_text_input("name_input", (150, 30), (20, 150), "e.g. Mars", 25, "Name")
+menu_group.add_element(ui.get_text_input("name_input"))
 
-pos_x_input = Text_input((50, 30), (360, 150), "X", 10)
-pos_y_input = Text_input((50, 30), (420, 150), "Y", 10)
-in_menu.append(pos_x_input)
-in_menu.append(pos_y_input)
+ui.create_text_input("mass_input", (150, 30), (190, 150), "e.g. 6.39*10**23", 25, "Mass in kg")
+menu_group.add_element(ui.get_text_input("mass_input"))
 
-radius_input = Text_input((50, 30), (490, 150), "Radius", 10)
-in_menu.append(radius_input)
+ui.create_text_input("pos_x_input", (150, 30), (360, 150), "e.g. 232*10**9", 10, "Position in m")
+ui.create_text_input("pos_y_input", (150, 30), (520, 150), "e.g. 0", 10)
+menu_group.add_element(ui.get_text_input("pos_x_input"))
+menu_group.add_element(ui.get_text_input("pos_y_input"))
 
-color_r_input = Text_input((50, 30), (560, 150), "R", 3)
-color_g_input = Text_input((50, 30), (620, 150), "G", 3)
-color_b_input = Text_input((50, 30), (680, 150), "B", 3)
-in_menu.append(color_r_input)
-in_menu.append(color_g_input)
-in_menu.append(color_b_input)
+ui.create_text_input("radius_input", (50, 30), (690, 150), "e.g. 20", 10, "Radius (display)")
+menu_group.add_element(ui.get_text_input("radius_input"))
 
-create_button = Button((100, 30), (630, 200), "Create Object")
-in_menu.append(create_button)
+ui.create_text_input("color_r_input", (50, 30), (20, 220), "e.g. 235", 3, "Color")
+ui.create_text_input("color_g_input", (50, 30), (80, 220), "e.g. 97", 3)
+ui.create_text_input("color_b_input", (50, 30), (140, 220), "e.g. 52", 3)
+menu_group.add_element(ui.get_text_input("color_r_input"))
+menu_group.add_element(ui.get_text_input("color_g_input"))
+menu_group.add_element(ui.get_text_input("color_b_input"))
+
+ui.create_checkbox("trajectory_toggle", (210, 220), "Show Trajectory", True)
+menu_group.add_element(ui.get_checkbox("trajectory_toggle"))
+
+# orbit
+ui.create_checkbox("orbit_toggle", (20, 310), "Orbit")
+menu_group.add_element(ui.get_checkbox("orbit_toggle"))
+
+ui.create_text_input("orbit_radius_input", (150, 30), (70, 310), "e.g. 231*10**9", 25, "Orbit Radius")
+menu_group.add_element(ui.get_text_input("orbit_radius_input"))
+
+ui.create_text_input("orbit_primary_input", (150, 30), (240, 310), "e.g. sun", 25, "Orbit Primary (exact name)")
+menu_group.add_element(ui.get_text_input("orbit_primary_input"))
+
+ui.create_button("create_button", (100, 30), (420, 310), "Create Object")
+menu_group.add_element(ui.get_button("create_button"))
+
+def menu_toggle():
+    menu_group.state = not menu_group.state
+ui.get_button("menu_button").assign_function(menu_toggle)
 
 def main():
     time = 0 # in seconds
@@ -180,43 +105,95 @@ def main():
 
     screen = pygame.display.set_mode([window_width, window_height])
     pygame.display.set_caption("space")
-    font = pygame.font.Font(path + "/data/fonts/Oxanium-VariableFont_wght.ttf", 12)
+    font = pygame.font.Font(path + "\Oxanium-VariableFont_wght.ttf", 12)
 
     clock = pygame.time.Clock()
     tickTimer = 0
+    planets.append(Planet(1*10**-100, (10**100, 0), 0, "dummy"))
+    planets.append(Planet(1*10**-100, (-10**100, 0), 0, "dummy"))
 
-    def load_default():
+    def load_sun():
+        planets.pop(0)
         planets.append(Planet(2 * 10**30, (0, 0), 50, "sun", (255, 255, 0), True))
-        planets.append(Planet(6 * 10**24, (50, 0), 10, "earth", (0, 0, 255), True))
-        planets.append(Planet(6.4 * 10**23, (231, 0), 9, "mars", (240, 0, 0), True))
+    ui.get_button("load_sun_button").assign_function(load_sun)
 
-        orbit_radius = 150 * distance_factor
-        orbital_speed = math.sqrt((G * planets[0].mass) / orbit_radius)
-        orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * planets[0].mass)
+    def load_earth():
+        primary = None
+        for planet in planets:
+            if planet.name == "sun":
+                primary = planet 
+        if primary != None:
+            planets.append(Planet(6 * 10**24, (50, 0), 10, "earth", (0, 0, 255), True))
+            orbit_radius = 150 * distance_factor
+            orbital_speed = math.sqrt((G * primary.mass) / orbit_radius)
+            orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * primary.mass)
+            theta = (2 * math.pi * time) / orbit_duration
 
-        theta = (2 * math.pi * time) / orbit_duration
-        planets[1].position = (orbit_radius, 0)
-        planets[1].velocity = (0, orbital_speed)
+            planets[-1].position = (orbit_radius, 0)
+            planets[-1].velocity = (0, orbital_speed)
+        else:
+            print("Error: Cannot load earth without objext called 'sun'")
+    ui.get_button("load_earth_button").assign_function(load_earth)
 
-        orbit_radius = 231 * distance_factor
-        orbital_speed = math.sqrt((G * planets[0].mass) / orbit_radius)
-        
-        planets[2].position = (orbit_radius, 0)
-        planets[2].velocity = (0, orbital_speed)
+    def load_mars():
+        primary = None
+        for planet in planets:
+            if planet.name == "sun":
+                primary = planet 
+        if primary != None:
+            planets.append(Planet(6.4 * 10**23, (231, 0), 9, "mars", (240, 0, 0), True))
 
-    load_default_button.assign_function(load_default)
+            orbit_radius = 240 * distance_factor
+            orbital_speed = math.sqrt((G * primary.mass) / orbit_radius)
+            orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * primary.mass)
+            theta = (2 * math.pi * time) / orbit_duration
+
+            planets[-1].position = (orbit_radius, 0)
+            planets[-1].velocity = (0, orbital_speed)
+        else:
+            print("Error: Cannot load mars without objext called 'sun'")
+    ui.get_button("load_mars_button").assign_function(load_mars)
+
 
     def load_new_planet():
         try:
-            planets.append(Planet(eval(mass_input.content), (eval(pos_x_input.content), eval(pos_y_input.content)), eval(radius_input.content), name_input.content, (int(color_r_input.content), int(color_g_input.content), int(color_b_input.content)), True))
+            planets.append(Planet(eval(ui.get_text_input("mass_input").content),
+                                    (eval(ui.get_text_input("pos_x_input").content), 
+                                    eval(ui.get_text_input("pos_y_input").content)), 
+                                    eval(ui.get_text_input("radius_input").content), 
+                                    ui.get_text_input("name_input").content, 
+                                    (int(ui.get_text_input("color_r_input").content), 
+                                    int(ui.get_text_input("color_g_input").content), 
+                                    int(ui.get_text_input("color_b_input").content)), 
+                                    ui.get_checkbox("trajectory_toggle").value))
             print("Object successfully loaded")
+            if ui.get_checkbox("orbit_toggle").value == True:
+                primary = None
+                for planet in planets:
+                    if planet.name == ui.get_text_input("orbit_primary_input").content:
+                        primary = planet
+                if primary != None:
+                    orbit_radius = eval(ui.get_text_input("orbit_radius_input").content)
+                    orbital_speed = math.sqrt((G * primary.mass) / orbit_radius)
+                    orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * primary.mass)
+
+                    planets[-1].position = (primary.position[0] + orbit_radius, 0)
+                    planets[-1].velocity = (0, orbital_speed)
+                else:
+                    print("Orbit parameters could not be calculated")
+            for element in ui.text_inputs:
+                element.content = ""
+            if len(planets) > 2:
+                if planets[0].name == "dummy":
+                    planets.pop(0)
         except:
             print("Error: Planet could not be created with given attributes")
 
-    create_button.assign_function(load_new_planet)
+    ui.get_button("create_button").assign_function(load_new_planet)
 
     last_update = 0
     running = True
+    print(overlay_group.elements)
     while running:
         tickTimer += clock.tick()
         for event in pygame.event.get():
@@ -296,30 +273,23 @@ def main():
             screen.blit(text, (20, window_height -40))
 
             # interactables
-            if menu_opened:
-                pygame.draw.rect(screen, (100, 100, 100, 100), pygame.Rect((10, 10), (window_width -20, window_height -20)))
+            if menu_group.state == True:
+                menu_surface = pygame.Surface((window_width, window_height))
+                menu_surface.set_alpha(200)
+                pygame.draw.rect(menu_surface, (0, 0, 0), pygame.Rect((10, 10), (window_width -20, window_height -20)))
+                screen.blit(menu_surface, (0, 0))
+            else:
+                for element in menu_group.elements:
+                    element.state = "idle"
 
-            for element in buttons:
-                element.checkActivity()
-                if element in in_menu and menu_opened == False: continue
-                pygame.draw.rect(screen, element.color, element.button_rect)
-                button_content = font.render(element.text, True, element.text_color)
-                screen.blit(button_content, (element.position[0] + (element.dimensions[0] / 2 - button_content.width / 2), element.position[1] + (element.dimensions[1] / 2 - button_content.height / 2)))
-
-            for element in text_inputs:
-                element.checkActivity()
-                if element in in_menu and menu_opened == False: continue
-                pygame.draw.rect(screen, element.color, element.input_rect)
-                if element.content != "":
-                    text_content = font.render(element.content, True, element.text_color)
-                else:
-                    text_content = font.render(element.placeholder, True, element.text_color)
-                screen.blit(text_content, (element.position[0] + element.dimensions[0] / 2 - text_content.width / 2, element.position[1] + element.dimensions[1] / 2 - text_content.height / 2))
-
+            for surface in ui.render((window_width, window_height)):
+                screen.blit(surface, (0, 0))
             pygame.display.update()
 
-        for element in buttons:
+        for element in ui.buttons:
             element.checkActivity()
-        for element in text_inputs:
+        for element in ui.text_inputs:
+            element.checkActivity()
+        for element in ui.checkboxes:
             element.checkActivity()
 main()
