@@ -1,0 +1,10 @@
+{
+    "defaults": {
+        "colours": {
+            "normal_bg": "rgb(100, 100, 100)",
+            "hovered_bg": "rgb(200, 200, 200)",
+            "pressed_gb": "rgb(0, 0, 100)",
+            "normal_text": "rgb(255, 255, 255)"
+        }
+    }
+}
