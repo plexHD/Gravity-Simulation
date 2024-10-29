@@ -63,7 +63,7 @@ menu_group.add_element(ui.get_checkbox("trajectory_toggle"))
 ui.create_checkbox("orbit_toggle", (20, 310), "Orbit")
 menu_group.add_element(ui.get_checkbox("orbit_toggle"))
 
-ui.create_text_input("orbit_radius_input", (150, 30), (70, 310), "e.g. 231*10**9", 25, "Orbit Radius")
+ui.create_text_input("orbit_radius_input", (150, 30), (70, 310), "e.g. 231*10**9", 25, "Orbit Radius in m")
 menu_group.add_element(ui.get_text_input("orbit_radius_input"))
 
 ui.create_text_input("orbit_primary_input", (150, 30), (240, 310), "e.g. sun", 25, "Orbit Primary (exact name)")
