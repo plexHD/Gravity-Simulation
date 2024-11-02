@@ -126,6 +126,7 @@ def main():
             planets.append(Planet(6 * 10**24, (50, 0), 10, "earth", (0, 0, 255), True))
             orbit_radius = 150 * distance_factor
             orbital_speed = math.sqrt((G * primary.mass) / orbit_radius)
+            print(orbital_speed)
             orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * primary.mass)
             theta = (2 * math.pi * time) / orbit_duration
 
@@ -175,10 +176,11 @@ def main():
                 if primary != None:
                     orbit_radius = eval(ui.get_text_input("orbit_radius_input").content)
                     orbital_speed = math.sqrt((G * primary.mass) / orbit_radius)
+                    print(orbital_speed)
                     orbit_duration = 2 * math.pi * math.sqrt(orbit_radius**3 / G * primary.mass)
 
-                    planets[-1].position = (primary.position[0] + orbit_radius, 0)
-                    planets[-1].velocity = (0, orbital_speed)
+                    planets[-1].position = (primary.position[0] + orbit_radius, primary.position[1])
+                    planets[-1].velocity = (primary.velocity[0], primary.velocity[1] + orbital_speed)
                 else:
                     print("Orbit parameters could not be calculated")
             for element in ui.text_inputs:
